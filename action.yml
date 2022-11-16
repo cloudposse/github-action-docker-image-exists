@@ -1,23 +1,57 @@
-name: 'Example composite GitHub action'
-description: 'Example composite GitHub action'
+name: 'Docker image exists'
+description: 'Check if docker image exists by pulling it'
 author: hello@cloudposse.com
 branding:
-  icon: 'file'
+  icon: 'download-cloud'
   color: 'white'
 inputs:
-  param1:
+  organization:
+    description: 'Organization'
     required: true
-    description: "Input parameter placeholder"
-    default: "true"
+  repository:
+    description: 'Repository'
+    required: true
+  registry:
+    description: 'Docker registry'
+    required: true
+  tag:
+    required: true
+    description: "Tag"
+  login:
+    description: 'Docker login'
+    required: false
+    default: ''
+  password:
+    description: 'Docker password'
+    required: false
+    default: ''
 outputs:
-  result1:
-    description: "Output result placeholder"
-    value: "${{ steps.context.outputs.action-result }}"
+  image:
+    description: "Docker image name"
+    value: ${{ steps.context.outputs.image }}
+  tag:
+    description: "Docker image tag"
+    value: ${{ inputs.tag }}
 runs:
   using: "composite"
   steps:
-    - id: context
+    - uses: cloudposse/github-action-yaml-config-query@0.1.0
+      id: context
+      with:
+        query: .
+        config: |-
+          image: ${{ inputs.registry }}/${{ inputs.organization }}/${{ inputs.repository }}
+
+    - name: Login
+      uses: docker/login-action@v2
+      if: ${{ contains(inputs.registry, '.amazonaws.com') || ( inputs.login != '' && inputs.password != '' ) }}
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.login }}
+        password: ${{ inputs.password }}
+
+    - name: Pull
+      id: pull
       shell: bash
       run: |
-          echo "::set-output name=action-result::${{ inputs.param1 }}"
-
+        docker pull ${{ steps.context.outputs.image }}:${{ inputs.tag }}

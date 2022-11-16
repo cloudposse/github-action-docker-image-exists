@@ -1,10 +1,10 @@
-name: Test example positive
+name: Docker exists
 on:
-#  # Uncomment when test added first time to register workflow and comment it back after workflow would be registered
-#  #
-#  # Added pull_request to register workflow from the PR.
-#  # Read more https://stackoverflow.com/questions/63362126/github-actions-how-to-run-a-workflow-created-on-a-non-master-branch-from-the-wo
-#  pull_request: {}
+  #  # Uncomment when test added first time to register workflow and comment it back after workflow would be registered
+  #  #
+  #  # Added pull_request to register workflow from the PR.
+  #  # Read more https://stackoverflow.com/questions/63362126/github-actions-how-to-run-a-workflow-created-on-a-non-master-branch-from-the-wo
+  #  pull_request: {}
   workflow_dispatch: {}
 
 jobs:
@@ -22,13 +22,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Build
+        id: build
+        uses: cloudposse/github-action-docker-build-push@1.6.0
+        with:
+          registry: registry.hub.docker.com
+          organization: ${{ github.event.repository.owner.login }}
+          repository: ${{ github.event.repository.name }}
+          login: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          workdir: ./test
+
       - uses: ./
         id: current
         with:
-          param1: 'true'
+          registry: registry.hub.docker.com
+          organization: ${{ github.event.repository.owner.login }}
+          repository: ${{ github.event.repository.name }}
+          login: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          tag: ${{ steps.build.outputs.tag }}
 
     outputs:
-      result: "${{ steps.current.outputs.result1 }}"
+      result: ${{ steps.current.conclusion }}
+      image: ${{ steps.current.outputs.image }}
+      tag: ${{ steps.current.outputs.tag }}
+      builded_tag: ${{ steps.build.outputs.tag }}
 
   assert:
     runs-on: ubuntu-latest
@@ -36,8 +55,18 @@ jobs:
     steps:
       - uses: nick-fields/assert-action@v1
         with:
-          expected: 'true'
+          expected: 'success'
           actual: "${{ needs.test.outputs.result }}"
+
+      - uses: nick-fields/assert-action@v1
+        with:
+          expected: registry.hub.docker.com/${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}
+          actual: "${{ needs.test.outputs.image }}"
+
+      - uses: nick-fields/assert-action@v1
+        with:
+          expected: ${{ needs.test.outputs.builded_tag }}
+          actual: ${{ needs.test.outputs.tag }}
 
   teardown:
     runs-on: ubuntu-latest
