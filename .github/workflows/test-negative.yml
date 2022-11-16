@@ -65,7 +65,7 @@ jobs:
 
       - uses: nick-fields/assert-action@v1
         with:
-          expected: ${{ needs.test.outputs.builded_tag }}
+          expected: hfdahjkhgkhajdksah
           actual: ${{ needs.test.outputs.tag }}
 
   teardown:
