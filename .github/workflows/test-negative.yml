@@ -60,12 +60,12 @@ jobs:
 
       - uses: nick-fields/assert-action@v1
         with:
-          expected: ''
+          expected: registry.hub.docker.com/${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}
           actual: "${{ needs.test.outputs.image }}"
 
       - uses: nick-fields/assert-action@v1
         with:
-          expected: ''
+          expected: ${{ needs.test.outputs.builded_tag }}
           actual: ${{ needs.test.outputs.tag }}
 
   teardown:
