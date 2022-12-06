@@ -1,13 +1,21 @@
 <!-- markdownlint-disable -->
+
 ## Inputs
 
 | Name | Description | Default | Required |
 |------|-------------|---------|----------|
-| param1 | Input parameter placeholder | true | true |
+| login | Docker login |  | false |
+| organization | Organization | N/A | true |
+| password | Docker password |  | false |
+| registry | Docker registry | N/A | true |
+| repository | Repository | N/A | true |
+| tag | Tag | N/A | true |
+
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| result1 | Output result placeholder |
+| image | Docker image name |
+| tag | Docker image tag |
 <!-- markdownlint-restore -->
